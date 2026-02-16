@@ -1,0 +1,62 @@
+html
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Safety Reporting Form</title>
+    <style>
+      *, *::before, *::after { box-sizing: border-box; }
+      .ae-container { max-width: 650px; margin: auto; padding: 25px; background: linear-gradient(135deg, #f7faff, #eef4ff); border-radius: 18px; box-shadow: 0 6px 22px rgba(0,0,0,0.12); font-family: "Segoe UI", Arial, sans-serif; }
+      .ae-section { background: white; padding: 20px; border-radius: 14px; box-shadow: 0 3px 12px rgba(0,0,0,0.08); margin-bottom: 20px; }
+      label { display: block; margin-top: 12px; font-weight: 600; color: #333; }
+      input, select, textarea { width: 100%; padding: 12px; margin-top: 6px; border: 1px solid #cfd8ff; border-radius: 10px; font-size: 15px; background: #f9fbff; }
+      button { width: 100%; padding: 14px; background: linear-gradient(135deg, #6c5ce7, #4a90e2); color: white; border: none; border-radius: 10px; cursor: pointer; font-size: 17px; font-weight: 600; margin-top: 20px; }
+      button:disabled { background: #ccc; cursor: not-allowed; }
+      #statusMessage { margin-top: 15px; text-align: center; font-weight: bold; }
+    </style>
+</head>
+<body>
+<div class="ae-container">
+  <h2>Safety Reporting Form</h2>
+  <form id="aeForm" class="ae-section">
+    <label for="reporterName">Reporter Name</label>
+    <input type="text" id="reporterName" name="reporterName" required>
+    <label for="reporterEmail">Reporter Email</label>
+    <input type="email" id="reporterEmail" name="reporterEmail" required>
+    <label for="eventDescription">Event Description</label>
+    <textarea id="eventDescription" name="eventDescription" required></textarea>
+    <!-- Add other fields here if needed -->
+    <button type="submit" id="submitBtn">Submit Report</button>
+    <p id="statusMessage"></p>
+  </form>
+</div>
+<script>
+document.getElementById("aeForm").addEventListener("submit", async function (e) {
+  e.preventDefault();
+  const btn = document.getElementById("submitBtn");
+  const status = document.getElementById("statusMessage");
+  const formData = new FormData(e.target);
+  const jsonData = Object.fromEntries(formData.entries());
+
+  btn.disabled = true;
+  status.innerText = "Submitting...";
+  
+  try {
+    const response = await fetch("/api/ae-report", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(jsonData)
+    });
+    if (response.ok) {
+      status.style.color = "green";
+      status.innerText = "Success!";
+      e.target.reset();
+    } else { throw new Error(); }
+  } catch (err) {
+    status.style.color = "red";
+    status.innerText = "Error. Try again.";
+  } finally { btn.disabled = false; }
+});
+</script>
+</body>
+</html>
