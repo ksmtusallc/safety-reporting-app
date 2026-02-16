@@ -1,52 +1,40 @@
+import { createClient } from '@supabase/supabase-client';
+
+// Initialize Supabase using environment variables
+const supabase = createClient(
+  process.env.SUPABASE_URL,
+  process.env.SUPABASE_SERVICE_ROLE_KEY
+);
+
 export default async function handler(req, res) {
-  // 1. SET CORS HEADERS (Required for Hostinger to talk to Vercel)
-  res.setHeader('Access-Control-Allow-Credentials', "true");
-  res.setHeader('Access-Control-Allow-Origin', 'https://safesignal-portal-builder-nzko98ouc1ykimj5.hostingersite.com'); 
-  res.setHeader('Access-Control-Allow-Methods', 'GET,OPTIONS,PATCH,DELETE,POST,PUT');
-  res.setHeader(
-    'Access-Control-Allow-Headers',
-    'X-CSRF-Token, X-Requested-With, Accept, Accept-Version, Content-Length, Content-MD5, Content-Type, Date, X-Api-Version, Content-Type'
-  );
+  // CORS Headers
+  res.setHeader('Access-Control-Allow-Credentials', true);
+  res.setHeader('Access-Control-Allow-Origin', '*');
+  res.setHeader('Access-Control-Allow-Methods', 'POST,OPTIONS');
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
 
-  // 2. HANDLE PREFLIGHT (OPTIONS request)
-  if (req.method === 'OPTIONS') {
-    res.status(200).end();
-    return;
-  }
+  if (req.method === 'OPTIONS') return res.status(200).end();
 
-  // 3. ONLY ALLOW POST REQUESTS
-  if (req.method !== 'POST') {
-    return res.status(405).json({ success: false, message: 'Method Not Allowed' });
-  }
+  if (req.method === 'POST') {
+    try {
+      const data = req.body;
 
-  try {
-    const data = req.body;
+      // Ensure patientAge is a number or null for Postgres
+      if (data.patientAge) data.patientAge = parseInt(data.patientAge);
+      if (data.patientAge === "") data.patientAge = null;
 
-    // 4. VALIDATION
-    if (!data || !data.reporterName || !data.reporterEmail || !data.eventDescription) {
-      return res.status(400).json({ 
-        success: false, 
-        message: 'Missing required fields: Name, Email, or Description.' 
-      });
+      const { error } = await supabase
+        .from('safety_reports')
+        .insert([data]);
+
+      if (error) throw error;
+
+      return res.status(200).json({ message: "Success" });
+    } catch (error) {
+      console.error(error);
+      return res.status(500).json({ error: error.message });
     }
-
-    // 5. LOG THE DATA (View this in Vercel Dashboard -> Logs)
-    console.log("=== NEW SAFETY REPORT RECEIVED ===");
-    console.log("Reporter:", data.reporterName, `(${data.reporterEmail})`);
-    console.log("Country:", data.reporterCountry);
-    console.log("Product:", data.productName);
-    console.log("Event:", data.eventDescription);
-    console.log("Serious:", data.serious || "No");
-    console.log("==================================");
-
-    // 6. SUCCESS RESPONSE
-    return res.status(200).json({ 
-      success: true, 
-      message: 'Report logged successfully' 
-    });
-
-  } catch (error) {
-    console.error("Backend Error:", error);
-    return res.status(500).json({ success: false, message: 'Internal Server Error' });
   }
+
+  return res.status(405).json({ message: "Method not allowed" });
 }
