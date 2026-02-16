@@ -1,4 +1,3 @@
-html
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -6,11 +5,7 @@ html
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Safety Reporting Form</title>
   <style>
-    /* Fix for input alignment */
-    *, *::before, *::after {
-      box-sizing: border-box;
-    }
-
+    *, *::before, *::after { box-sizing: border-box; }
     .ae-container {
       max-width: 650px;
       margin: auto;
@@ -20,78 +15,25 @@ html
       box-shadow: 0 6px 22px rgba(0,0,0,0.12);
       font-family: "Segoe UI", Arial, sans-serif;
     }
-
-    .ae-container h2 {
-      text-align: center;
-      margin-bottom: 20px;
-      color: #4a4a4a;
-      font-size: 26px;
-    }
-
-    .ae-section {
-      background: white;
-      padding: 20px;
-      border-radius: 14px;
-      box-shadow: 0 3px 12px rgba(0,0,0,0.08);
-      margin-bottom: 20px;
-    }
-
-    label {
-      display: block;
-      margin-top: 12px;
-      font-weight: 600;
-      color: #333;
-    }
-
-    input, select, textarea {
-      width: 100%;
-      padding: 12px;
-      margin-top: 6px;
-      border: 1px solid #cfd8ff;
-      border-radius: 10px;
-      font-size: 15px;
-      background: #f9fbff;
-    }
-
+    .ae-container h2 { text-align: center; margin-bottom: 20px; color: #4a4a4a; font-size: 26px; }
+    .ae-section { background: white; padding: 20px; border-radius: 14px; box-shadow: 0 3px 12px rgba(0,0,0,0.08); margin-bottom: 20px; }
+    label { display: block; margin-top: 12px; font-weight: 600; color: #333; }
+    input, select, textarea { width: 100%; padding: 12px; margin-top: 6px; border: 1px solid #cfd8ff; border-radius: 10px; font-size: 15px; background: #f9fbff; }
     textarea { min-height: 100px; }
-
     button {
-      width: 100%;
-      padding: 14px;
-      background: linear-gradient(135deg, #6c5ce7, #4a90e2);
-      color: white;
-      border: none;
-      border-radius: 10px;
-      cursor: pointer;
-      font-size: 17px;
-      font-weight: 600;
-      margin-top: 20px;
-      transition: 0.2s;
+      width: 100%; padding: 14px; background: linear-gradient(135deg, #6c5ce7, #4a90e2);
+      color: white; border: none; border-radius: 10px; cursor: pointer; font-size: 17px; font-weight: 600; margin-top: 20px; transition: 0.2s;
     }
-
-    button:hover:not(:disabled) {
-      opacity: 0.9;
-    }
-
-    button:disabled {
-      background: #a0aec0;
-      cursor: not-allowed;
-    }
-
-    #statusMessage {
-      margin-top: 15px;
-      text-align: center;
-      font-weight: bold;
-    }
+    button:hover:not(:disabled) { opacity: 0.9; }
+    button:disabled { background: #a0aec0; cursor: not-allowed; }
+    #statusMessage { margin-top: 15px; text-align: center; font-weight: bold; }
   </style>
 </head>
 <body>
 
 <div class="ae-container">
   <h2>Safety Reporting Form</h2>
-
   <form id="aeForm" class="ae-section">
-    <!-- Added IDs and labels for accessibility -->
     <label for="reporterName">Reporter Name</label>
     <input type="text" id="reporterName" name="reporterName" required>
 
@@ -147,7 +89,6 @@ html
     </select>
 
     <button type="submit" id="submitBtn">Submit Report</button>
-
     <p id="statusMessage"></p>
   </form>
 </div>
@@ -155,24 +96,26 @@ html
 <script>
 document.getElementById("aeForm").addEventListener("submit", async function (e) {
   e.preventDefault();
-
   const form = e.target;
   const submitBtn = document.getElementById("submitBtn");
   const status = document.getElementById("statusMessage");
 
-  // Disable button to prevent duplicate clicks
   submitBtn.disabled = true;
   status.style.color = "#4a90e2";
-  status.innerText = "Submitting...";
+  status.innerText = "Submitting to Secure Server...";
 
   const formData = new FormData(form);
-  const jsonData = {};
-  formData.forEach((value, key) => {
-    jsonData[key] = value;
-  });
+  const jsonData = Object.fromEntries(formData.entries());
+
+  // Data Cleaning: Convert patientAge to number
+  if (jsonData.patientAge) {
+    jsonData.patientAge = parseInt(jsonData.patientAge, 10);
+  } else {
+    jsonData.patientAge = null;
+  }
 
   try {
-    // UPDATED: Now uses relative path for your own Vercel API
+    // FIX: Using relative path since HTML and API are in the same Vercel project
     const response = await fetch("/api/ae-report", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -181,17 +124,18 @@ document.getElementById("aeForm").addEventListener("submit", async function (e) 
 
     if (response.ok) {
       status.style.color = "green";
-      status.innerText = "Report submitted successfully!";
+      status.innerText = "✅ Report submitted successfully!";
       form.reset();
     } else {
+      const errorData = await response.json().catch(() => ({}));
       status.style.color = "red";
-      status.innerText = "Submission failed. Please try again.";
+      status.innerText = "❌ Submission failed: " + (errorData.error || "Server Error");
     }
   } catch (error) {
     status.style.color = "red";
-    status.innerText = "Network error. Please check your connection.";
+    status.innerText = "❌ Network error. Check Vercel Logs.";
+    console.error("Submission error:", error);
   } finally {
-    // Re-enable button
     submitBtn.disabled = false;
   }
 });
