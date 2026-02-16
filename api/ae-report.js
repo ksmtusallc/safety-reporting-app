@@ -1,34 +1,27 @@
 javascript
 export default async function handler(req, res) {
-  // 1. SET EXPLICIT HEADERS (Replace * with your actual Hostinger URL for better safety)
-  res.setHeader('Access-Control-Allow-Credentials', "true");
-  res.setHeader('Access-Control-Allow-Origin', 'https://safesignal-portal-builder-nzko98ouc1ykimj5.hostingersite.com'); 
+  const allowedOrigin = "https://safesignal-portal-builder-nzko98ouc1ykimj5.hostingersite.com";
+  
+  // Set headers dynamically based on the request origin
+  res.setHeader('Access-Control-Allow-Origin', allowedOrigin);
+  res.setHeader('Access-Control-Allow-Credentials', 'true');
   res.setHeader('Access-Control-Allow-Methods', 'GET,OPTIONS,PATCH,DELETE,POST,PUT');
-  res.setHeader(
-    'Access-Control-Allow-Headers',
-    'X-CSRF-Token, X-Requested-With, Accept, Accept-Version, Content-Length, Content-MD5, Content-Type, Date, X-Api-Version, Content-Type'
-  );
+  res.setHeader('Access-Control-Allow-Headers', 'X-CSRF-Token, X-Requested-With, Accept, Accept-Version, Content-Length, Content-MD5, Content-Type, Date, X-Api-Version');
 
-  // 2. HANDLE PREFLIGHT (REQUIRED for complex POST requests)
+  // Handle the browser's "Preflight" check
   if (req.method === 'OPTIONS') {
-    res.status(200).end();
-    return;
+    return res.status(200).end();
   }
 
   if (req.method !== 'POST') {
-    return res.status(405).json({ success: false, message: 'Method Not Allowed' });
+    return res.status(405).json({ message: 'Method Not Allowed' });
   }
 
   try {
-    const data = req.body;
-    console.log("=== DATA RECEIVED FROM HOSTINGER ===", data);
-
-    return res.status(200).json({ 
-      success: true, 
-      message: 'Report received!' 
-    });
+    console.log("Form Data Received:", req.body);
+    return res.status(200).json({ success: true, message: "Report received!" });
   } catch (error) {
     console.error("Backend Error:", error);
-    return res.status(500).json({ success: false, message: 'Internal Server Error' });
+    return res.status(500).json({ success: false, message: "Internal Server Error" });
   }
 }
