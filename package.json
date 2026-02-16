@@ -1,7 +1,0 @@
-{
-  "name": "safety-reporting-app",
-  "version": "1.0.0",
-  "dependencies": {
-    "@supabase/supabase-client": "^2.39.0"
-  }
-}
