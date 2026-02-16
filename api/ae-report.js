@@ -1,46 +1,51 @@
 javascript
 export default async function handler(req, res) {
-  // 1. Only allow POST requests (this is what your form sends)
+  // 1. ALLOW CORS (This lets your Hostinger site talk to Vercel)
+  res.setHeader('Access-Control-Allow-Credentials', "true");
+  res.setHeader('Access-Control-Allow-Origin', '*'); // Allows all websites to send data (Safe for testing)
+  res.setHeader('Access-Control-Allow-Methods', 'GET,OPTIONS,PATCH,DELETE,POST,PUT');
+  res.setHeader(
+    'Access-Control-Allow-Headers',
+    'X-CSRF-Token, X-Requested-With, Accept, Accept-Version, Content-Length, Content-MD5, Content-Type, Date, X-Api-Version'
+  );
+
+  // 2. Handle the "Preflight" request (Browsers send this first to check permissions)
+  if (req.method === 'OPTIONS') {
+    res.status(200).end();
+    return;
+  }
+
+  // 3. Only allow POST requests (The form submission)
   if (req.method !== 'POST') {
-    return res.status(405).json({ 
-      success: false, 
-      message: 'Method Not Allowed' 
-    });
+    return res.status(405).json({ success: false, message: 'Method Not Allowed' });
   }
 
   try {
-    // 2. Capture the data sent from your index.html
     const data = req.body;
 
-    // 3. Validation: Ensure required fields are not empty
+    // 4. Basic Validation: Ensure required fields are not empty
     if (!data.reporterName || !data.reporterEmail || !data.eventDescription) {
       return res.status(400).json({ 
         success: false, 
-        message: 'Error: Name, Email, and Description are required.' 
-    });
-  }
+        message: 'Missing required fields: Name, Email, or Description.' 
+      });
+    }
 
-    // 4. LOG THE DATA: This is how you read the reports!
-    // You will see this in the "Logs" tab of your Vercel Project.
-    console.log("--- NEW SAFETY REPORT RECEIVED ---");
-    console.log("Reporter:", data.reporterName);
-    console.log("Email:", data.reporterEmail);
-    console.log("Country:", data.reporterCountry || "Not Provided");
-    console.log("Patient ID:", data.patientInitials || "N/A");
-    console.log("Product:", data.productName || "Unknown");
-    console.log("Event Description:", data.eventDescription);
-    console.log("Serious:", data.serious || "Not Specified");
-    console.log("----------------------------------");
+    // 5. LOG THE DATA: You will see this in your Vercel Project "Logs" tab
+    console.log("=== NEW SAFETY REPORT FROM HOSTINGER ===");
+    console.log("Reporter:", data.reporterName, `(${data.reporterEmail})`);
+    console.log("Event:", data.eventDescription);
+    console.log("Serious:", data.serious || "No");
+    console.log("=========================================");
 
-    // 5. Send a success response back to the user's browser
+    // 6. Send success response back to Hostinger
     return res.status(200).json({ 
       success: true, 
-      message: 'Report received successfully!' 
+      message: 'Report logged successfully' 
     });
 
   } catch (error) {
-    // If something breaks, log the error
-    console.error("Backend Error:", error);
+    console.error("Submission Error:", error);
     return res.status(500).json({ 
       success: false, 
       message: 'Internal Server Error' 
