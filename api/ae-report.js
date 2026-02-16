@@ -1,4 +1,3 @@
-javascript
 export default async function handler(req, res) {
   // 1. SET CORS HEADERS (Crucial for Hostinger)
   res.setHeader('Access-Control-Allow-Credentials', "true");
@@ -49,3 +48,4 @@ export default async function handler(req, res) {
     return res.status(500).json({ success: false, message: 'Internal Server Error' });
   }
 }
+
