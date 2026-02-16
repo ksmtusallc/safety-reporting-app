@@ -1,14 +1,14 @@
 export default async function handler(req, res) {
-  // 1. SET CORS HEADERS (Crucial for Hostinger)
+  // 1. SET CORS HEADERS (Required for Hostinger to talk to Vercel)
   res.setHeader('Access-Control-Allow-Credentials', "true");
-  res.setHeader('Access-Control-Allow-Origin', '*'); 
+  res.setHeader('Access-Control-Allow-Origin', 'https://safesignal-portal-builder-nzko98ouc1ykimj5.hostingersite.com'); 
   res.setHeader('Access-Control-Allow-Methods', 'GET,OPTIONS,PATCH,DELETE,POST,PUT');
   res.setHeader(
     'Access-Control-Allow-Headers',
-    'X-CSRF-Token, X-Requested-With, Accept, Accept-Version, Content-Length, Content-MD5, Content-Type, Date, X-Api-Version'
+    'X-CSRF-Token, X-Requested-With, Accept, Accept-Version, Content-Length, Content-MD5, Content-Type, Date, X-Api-Version, Content-Type'
   );
 
-  // 2. HANDLE PREFLIGHT (OPTIONS)
+  // 2. HANDLE PREFLIGHT (OPTIONS request)
   if (req.method === 'OPTIONS') {
     res.status(200).end();
     return;
@@ -33,6 +33,8 @@ export default async function handler(req, res) {
     // 5. LOG THE DATA (View this in Vercel Dashboard -> Logs)
     console.log("=== NEW SAFETY REPORT RECEIVED ===");
     console.log("Reporter:", data.reporterName, `(${data.reporterEmail})`);
+    console.log("Country:", data.reporterCountry);
+    console.log("Product:", data.productName);
     console.log("Event:", data.eventDescription);
     console.log("Serious:", data.serious || "No");
     console.log("==================================");
@@ -48,4 +50,3 @@ export default async function handler(req, res) {
     return res.status(500).json({ success: false, message: 'Internal Server Error' });
   }
 }
-
